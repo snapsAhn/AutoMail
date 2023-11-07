@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>일일보고 템플릿</title>
+
+    <style>
+        body {
+            font-family:"맑은 고딕";
+            font-size: 10pt;
+        }
+    </style>
+</head>
+
+<body>
+    
+    <h3>Daily Report - Disk & Problems List </h3>
+
+    <p>Date: {{ day }} </p>
+    
+    <table>
+        <tr><td>1. 디스크 사용량</td></tr>
+        <tr><td>
+            <table border="1", width="1000", align="left", style="border-collapse: collapse;">
+                <th bgcolor="#D2D2D2">호스트그룹</th>
+                <th bgcolor="#D2D2D2">호스트</th>
+                <th bgcolor="#D2D2D2">이름</th>
+                <th bgcolor="#D2D2D2">최근 검사</th>
+                <th bgcolor="#D2D2D2">최근 값</th>
+                
+                {% for result in disk_result_all %}
+                    <tr align="center"><!-- n번째 줄 시작 -->
+                        <td >{{ result['hostgroup'] }}</td>
+                        <td >{{ result['host'] }}</td>
+                        <td align="left">&nbsp{{ result['name'] }}</td>
+                        <td >{{ result['event_time'] }}</td>
+                        <!-- value 컬럼 값 및 호스트그룹에 따라서 색상 차등 부여 -->
+                        {% if result['hostgroup'] == "hmm_DB" %}
+                            {% if result['value'] >= 88 %}
+                                <td bgcolor="#E27575">{{ result['value'] }}%</td>
+                            {% elif result['value'] >= 85 %}
+                                <td bgcolor="#EA9C9C">{{ result['value'] }}%</td>
+                            {% elif result['value'] >= 82 %}
+                                <td bgcolor="#F2C3C3">{{ result['value'] }}%</td>
+                            {% else %}
+                                <td bgcolor="#F6D7D7">{{ result['value'] }}%</td>
+                            {% endif %}
+                        {% else %}    
+                            {% if result['value'] >= 78 %}
+                                <td bgcolor="#8282FA">{{ result['value'] }}%</td>
+                            {% elif result['value'] >= 75 %}
+                                <td bgcolor="#AAAAFA">{{ result['value'] }}%</td>
+                            {% elif result['value'] >= 72 %}
+                                <td bgcolor="#D2D2FA">{{ result['value'] }}%</td>
+                            {% else %}
+                                <td bgcolor="#FAFAFA">{{ result['value'] }}%</td>
+                            {% endif %}
+                        {% endif %}
+                    </tr><!-- n번째 줄 끝 -->
+                {% endfor%}
+            </table>
+        </td></tr>
+        <tr><td>(새로 리스트에 추가된 항목은 * 표시 (ex. * INSTANCE01)) </td></tr>
+        <tr><td><br>2. 장애 알람 (From: {{ oneweekToStr }})</td></tr>
+        <tr><td>
+            <table border="1", width="1000", align="left", style="border-collapse: collapse;">
+                <th width="80", bgcolor="#D2D2D2">Event ID</th>
+                <th width="160", bgcolor="#D2D2D2">Group Name</th>
+                <th width="170", bgcolor="#D2D2D2">Host Name</th>
+                <th width="130", bgcolor="#D2D2D2">Event Time</th>
+                <th bgcolor="#D2D2D2">Problems</th>
+                <!-- <th width="70", bgcolor="#D2D2D2">Severity</th> -->
+                {% if error_result_len == 0  %}
+                    <tr><td align="center" colspan="5">조회된 결과가 없습니다.</td></tr>
+                {% else %}
+                    {% for result in error_result %}
+                        <tr align="center"><!-- n번째 줄 시작 -->
+                            <td >{{ result['eventid'] }}</td>
+                            <td >{{ result['name'] }}</td>
+                            <td >{{ result['h.name'] }}</td>
+                            <td >{{ result['event_time'] }}</td>
+                            <td align="left">&nbsp{{ result['e.name'] }}</td>
+                            <!-- <td>{{ result['severity'] }}</td> -->
+                        </tr><!-- n번째 줄 끝 -->
+                    {% endfor%}
+                {% endif%}
+            </table>
+        </td></tr>
+    </table>
+    <br><br>
+    본 메일은 발신전용 메일입니다.
+    
+    
+</body>
