@@ -36,6 +36,9 @@ def is_busday(workdayStr):
                 '2022-09-12','2022-10-03','2022-10-10']
     holidays_2023 = ['2023-01-23', '2023-01-24','2023-03-01','2023-05-05','2023-06-06',
                     '2023-08-15','2023-09-28','2023-09-29','2023-10-03','2023-10-09','2023-12-25']
+    holidays_2024 = ['2024-01-01', '2024-02-09', '2024-02-10', '2024-02-11', '2024-02-12', '2024-03-01',
+                '2024-04-10','2024-05-05','2024-05-06','2024-05-15','2024-06-06','2024-08-15',
+                '2024-09-16','2024-09-17','2024-09-18','2024-10-03','2024-10-09','2024-12-25']
 
     bdd = numpy.busdaycalendar(weekmask='1111100', holidays=holidays_2023)
     return numpy.is_busday(workdayStr, busdaycal=bdd)
@@ -93,17 +96,17 @@ def send_email(to, subj, body):
 # SSH 터널링 하여 DB에 접속
 def disk_dayreport(date, datePlusOne):
     with sshtunnel.SSHTunnelForwarder(
-                            ('[DB IP]'),
-                            ssh_username='[username]',
-                            ssh_pkey='[DB Server Key]',
-                            remote_bind_address=('[DB IP]', 3306),
+                            ('172.17.44.2'),
+                            ssh_username='opc',
+                            ssh_pkey='C:\key\mon\MMONKDB',
+                            remote_bind_address=('172.17.44.2', 3306),
                             ) as tunnel:
     # connect MySQL like local                           
         with pymysql.connect(
             host='127.0.0.1', #ssh 터널링을 통해 172.17.44.2의 입장이 되었으므로 localhost로 접속해줌
-            user='[db user]]',
-            passwd='[db password]',
-            db='[db name]',
+            user='zabbix',
+            passwd='hmmmon12#',
+            db='zabbix',
             charset='utf8',
             port=tunnel.local_bind_port,
             cursorclass=pymysql.cursors.DictCursor) as conn:
@@ -158,17 +161,17 @@ def disk_dayreport(date, datePlusOne):
             
 def error_dayreport():
     with sshtunnel.SSHTunnelForwarder(
-                            ('[db ip]'),
-                            ssh_username='[username]]',
-                            ssh_pkey='[DB server key]',
-                            remote_bind_address=('[db ip]', 3306),
+                            ('172.17.44.2'),
+                            ssh_username='opc',
+                            ssh_pkey='C:\key\mon\MMONKDB',
+                            remote_bind_address=('172.17.44.2', 3306),
                             ) as tunnel:
     # connect MySQL like local                           
         with pymysql.connect(
             host='127.0.0.1', #ssh 터널링을 통해 172.17.44.2의 입장이 되었으므로 localhost로 접속해줌
-            user='[db user]',
-            passwd='[db password]',
-            db='[db name]',
+            user='zabbix',
+            passwd='hmmmon12#',
+            db='zabbix',
             charset='utf8',
             port=tunnel.local_bind_port,
             cursorclass=pymysql.cursors.DictCursor) as conn:
@@ -226,7 +229,7 @@ def check_run():
         error_result = error_dayreport()
         error_result_len_now = len(error_result)
 
-        send_template_email(template='day_report.html', to="[mail receiver]", subj=day+" 디스크 사용량 및 장애 알람 보고", 
+        send_template_email(template='day_report.html', to="hmm1119525@hmm21.com", subj=day+" 디스크 사용량 및 장애 알람 보고", 
         day=day, disk_result_all_now= disk_result_all_now, disk_result_all_yesterday = disk_result_all_yesterday, error_result = error_result, 
             error_result_len=error_result_len_now, oneweekToStr=oneweekToStr, disk_result_all_len=disk_result_all_len_now)
     else:
@@ -235,3 +238,27 @@ def check_run():
 check_run()
 
 
+
+# 05/09 수정사항
+# 1. .bat 파일 실행시 template를 못 찾는 문제
+# 2. 장애 알람 없을 땐 조회된 결과가 없습니다 출력 O
+# 3. 보내는 사람 형식 바꾸기
+
+# 05/17 수정사항
+# 1. error_dayreport()에 ifnull(max(e.eventid), 0)를 넣었더니 한 줄만 조회하는 결과가 나옴. 이에 따라 이 줄 없애고 다른 방법 강구.
+# 2. error_result_len값을 넣어서 0일 경우를 if문으로 처리함.
+# 3. business day체크하여 함수 실행시키는 로직 추가
+
+# 23/01/03 수정사항
+# 1. def disk_dayreport(date, datePlusOne): 변수를 받아 시행하도록 수정
+# 2. def check_run(): 함수에서 전일과 겹치지 않는 host의 경우 * 표시 붙도록 수정
+# 3. 기타 변수 수정 disk_result_all > disk_result_all_now 등
+
+
+# 23/01/17 수정사항
+# 1. 디스크 사용량 전일 데이터 같이 출력되게 수정
+# 2. day_report.html 수정 - 열 추가(이전 값, 차이)
+
+# 23/03/27 수정사항
+# 1. 데이터를 2개 불러오는 현상이 있어 처리하는 코드 추가
+# 2. day_report.html 
